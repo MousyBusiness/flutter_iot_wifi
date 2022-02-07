@@ -43,5 +43,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Find WiFi</string>
 </dict>
 </plist>
