@@ -4,7 +4,7 @@ import NetworkExtension
 import SystemConfiguration.CaptiveNetwork
 
 public class SwiftFlutterIotWifiPlugin: NSObject, FlutterPlugin {
-    var ssidCache: String?;
+    var ssidCache: String?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "flutter_iot_wifi", binaryMessenger: registrar.messenger())
@@ -27,7 +27,7 @@ public class SwiftFlutterIotWifiPlugin: NSObject, FlutterPlugin {
         switch call.method {
         case "connect":
             debug("connect")
-            ssidCache = "";
+            ssidCache = ""
 
             if let args = call.arguments as? Dictionary<String, Any> {
                 let ssid = args["ssid"] as? String
@@ -52,6 +52,10 @@ public class SwiftFlutterIotWifiPlugin: NSObject, FlutterPlugin {
                 debug("no ssid cache to disconnect")
             }
             break
+        case "current":
+            let ssid = current()
+            result(ssid)
+            return
         default:
             debug("\(call.method) not implemented")
 
@@ -60,20 +64,19 @@ public class SwiftFlutterIotWifiPlugin: NSObject, FlutterPlugin {
     }
 
     private func connect(_ ssid: String, _ password: String) {
-        debug("ssid: \(ssid), password: \(password)")
         if #available(iOS 11.0, *) {
-            let hotspotConfig = NEHotspotConfiguration(ssid: ssid, passphrase: password, isWEP: false);
-            hotspotConfig.joinOnce = true;
+            let hotspotConfig = NEHotspotConfiguration(ssid: ssid, passphrase: password, isWEP: false)
+            hotspotConfig.joinOnce = true
             NEHotspotConfigurationManager.shared.apply(hotspotConfig) { [unowned self] (error) in
                 if let error = error {
                     if (error.localizedDescription.contains("already associated")) {
-                        debug("connection already established");
+                        debug("connection already established")
                     } else {
-                        debug("[Error] \(error)");
+                        debug("[Error] \(error)")
                     }
                 } else {
                     debug("connected!")
-                    ssidCache = ssid;
+                    ssidCache = ssid
                 }
             }
         }
@@ -81,7 +84,24 @@ public class SwiftFlutterIotWifiPlugin: NSObject, FlutterPlugin {
 
     private func disconnect(_ ssid: String) {
         if #available(iOS 11.0, *) {
-            NEHotspotConfigurationManager.shared.removeConfiguration(forSSID: ssid);
+            NEHotspotConfigurationManager.shared.removeConfiguration(forSSID: ssid)
         }
     }
+
+      public func current() -> String? {
+        if #available(iOS 11.0, *) {
+          var ssid: String?
+          if let interfaces = CNCopySupportedInterfaces() as NSArray? {
+            for interface in interfaces {
+              if let interfaceInfo = CNCopyCurrentNetworkInfo(interface as! CFString) as NSDictionary? {
+                ssid = interfaceInfo[kCNNetworkInfoKeySSID as String] as? String
+                break
+              }
+            }
+          }
+          return ssid
+        }
+
+        return nil
+      }
 }

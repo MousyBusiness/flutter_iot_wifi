@@ -1,5 +1,5 @@
-
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 
@@ -14,5 +14,38 @@ class FlutterIotWifi {
   static Future<bool?> disconnect() async {
     final disconnected = await _channel.invokeMethod('disconnect');
     return disconnected;
+  }
+
+  static Future<bool?> scan() async {
+    if (Platform.isIOS) {
+      print("NOT IMPLEMENTED");
+      return false;
+    }
+    final scan = await _channel.invokeMethod('scan');
+    return scan;
+  }
+
+  static Future<List<String>> list() async {
+    if (Platform.isIOS) {
+      print("NOT IMPLEMENTED");
+      return [];
+    }
+
+    final ssids= <String>[];
+    final list = await _channel.invokeMethod('list');
+    if(list != null){
+      for(final l in list){
+        if(l != null){
+          ssids.add(l as String);
+        }
+      }
+    }
+    return ssids;
+  }
+
+  static Future<String?> current() async {
+    final current = await _channel.invokeMethod('current');
+    print("result in flutter: $current");
+    return current;
   }
 }

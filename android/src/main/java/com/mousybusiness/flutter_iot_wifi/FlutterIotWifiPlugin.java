@@ -1,6 +1,9 @@
 package com.mousybusiness.flutter_iot_wifi;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.MacAddress;
@@ -8,7 +11,9 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.NetworkSpecifier;
+import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Build;
@@ -19,6 +24,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
@@ -34,12 +41,17 @@ public class FlutterIotWifiPlugin implements FlutterPlugin, MethodCallHandler {
     private MethodChannel channel;
 
     private WeakReference<Context> context = null;
+    WifiManager wifiManager;
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
         context = new WeakReference<Context>(flutterPluginBinding.getApplicationContext());
         channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "flutter_iot_wifi");
         channel.setMethodCallHandler(this);
+
+        wifiManager = (WifiManager)
+                context.get().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
     }
 
     @Override
@@ -47,7 +59,13 @@ public class FlutterIotWifiPlugin implements FlutterPlugin, MethodCallHandler {
         if (call.method.equals("connect")) {
             connect(call, result);
         } else if (call.method.equals("disconnect")) {
-            disconnect(call, result);
+            disconnect(result);
+        } else if (call.method.equals("scan")) {
+            scan(result);
+        } else if (call.method.equals("list")) {
+            result.success(lastScanResults);
+        } else if (call.method.equals("current")) {
+            current(result);
         } else {
             result.notImplemented();
         }
@@ -154,7 +172,7 @@ public class FlutterIotWifiPlugin implements FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private void disconnect(@NonNull MethodCall call, @NonNull Result result) {
+    private void disconnect(@NonNull Result result) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
 
             if (networkWeakReference != null && networkWeakReference.get() != null) {
@@ -176,6 +194,57 @@ public class FlutterIotWifiPlugin implements FlutterPlugin, MethodCallHandler {
             error("unsupported Android version, please use >= Q");
             result.success(false);
         }
+    }
+
+    private void scan(@NonNull Result result) {
+        BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context c, Intent intent) {
+                boolean success = intent.getBooleanExtra(
+                        WifiManager.EXTRA_RESULTS_UPDATED, false);
+                if (success) {
+                    scanSuccess();
+                } else {
+                    // scan failure handling
+                    scanFailure();
+                }
+            }
+        };
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        context.get().getApplicationContext().registerReceiver(wifiScanReceiver, intentFilter);
+
+        boolean success = wifiManager.startScan();
+        if (!success) {
+            // scan failure handling
+            result.success(false);
+        } else {
+            result.success(true);
+        }
+    }
+
+    ArrayList<String> lastScanResults = new ArrayList<>();
+
+    private void scanSuccess() {
+        debug("scan successful");
+        List<ScanResult> results = wifiManager.getScanResults();
+        lastScanResults.clear();
+        for (ScanResult res : results) {
+            if (!lastScanResults.contains(res.SSID) && !res.SSID.isEmpty()) {
+                lastScanResults.add(res.SSID);
+            }
+        }
+    }
+
+    private void scanFailure() {
+        debug("scan failure");
+    }
+
+    private void current(@NonNull Result result) {
+        WifiInfo info = wifiManager.getConnectionInfo();
+        String ssid = info.getSSID();
+        result.success(ssid);
     }
 
     @Override

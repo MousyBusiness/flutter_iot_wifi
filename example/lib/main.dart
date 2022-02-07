@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_iot_wifi/flutter_iot_wifi.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,27 +27,70 @@ class MyApp extends StatelessWidget {
 class AccessPointWidget extends StatelessWidget {
   const AccessPointWidget({Key? key}) : super(key: key);
 
-  final String ssid = "Example";
-  final String password = "12345678";
+  final String ssid = "Example"; // TODO replace with your ssid
+  final String password = "12345678"; // TODO replace with your password
 
-  void _connect() {
-    FlutterIotWifi.connect(ssid, password).then((value) => print("connected $value"));
+  Future<bool> _checkPermissions() async {
+    if (await Permission.location.request().isGranted) {
+      print("granted");
+      return true;
+    }
+    return false;
   }
 
-  void _disconnect() {
-    FlutterIotWifi.disconnect().then((value) => print("disconnected $value"));
+  void _connect() async {
+    if (await _checkPermissions()) {
+      FlutterIotWifi.connect(ssid, password).then((value) => print("connected $value"));
+    } else {
+      print("don't have permission");
+    }
+  }
+
+  void _disconnect() async {
+    if (await _checkPermissions()) {
+      FlutterIotWifi.disconnect().then((value) => print("disconnected $value"));
+    } else {
+      print("don't have permission");
+    }
+  }
+
+  void _scan() async {
+    if (await _checkPermissions()) {
+      FlutterIotWifi.scan().then((value) => print("scan $value"));
+    } else {
+      print("don't have permission");
+    }
+  }
+
+  void _list() async {
+    if (await _checkPermissions()) {
+      FlutterIotWifi.list().then((value) => print("list $value"));
+    } else {
+      print("don't have permission");
+    }
+  }
+
+  void _current() async {
+    if (await _checkPermissions()) {
+      FlutterIotWifi.current().then((value) => print("current $value"));
+    } else {
+      print("don't have permission");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return  Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Center(child: Text("SSID: $ssid, PASSWORD: $password")),
-          _CustomButton(onPressed: _connect, child: const Text("Connect")),
-          _CustomButton(onPressed: _disconnect, child: const Text("Disconnect")),
-        ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        Center(child: Text("SSID: $ssid, PASSWORD: $password")),
+        _CustomButton(onPressed: _connect, child: const Text("Connect")),
+        _CustomButton(onPressed: _disconnect, child: const Text("Disconnect")),
+        _CustomButton(onPressed: _scan, child: const Text("Scan (Android only)")),
+        _CustomButton(onPressed: _list, child: const Text("List (Android only)")),
+        _CustomButton(onPressed: _current, child: const Text("Current")),
+      ],
     );
   }
 }
@@ -62,4 +106,3 @@ class _CustomButton extends StatelessWidget {
     return SizedBox(height: 40, child: ElevatedButton(onPressed: onPressed, child: child));
   }
 }
-
