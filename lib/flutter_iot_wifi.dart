@@ -45,7 +45,6 @@ class FlutterIotWifi {
 
   static Future<String?> current() async {
     final current = await _channel.invokeMethod('current');
-    print("result in flutter: $current");
     return current;
   }
 }

@@ -17,6 +17,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Build;
+import android.os.Looper;
 import android.os.PatternMatcher;
 import android.util.Log;
 
@@ -161,6 +162,10 @@ public class FlutterIotWifiPlugin implements FlutterPlugin, MethodCallHandler {
                 public void onAvailable(@NonNull Network network) {
                     debug("onAvailable");
                     super.onAvailable(network);
+
+                    boolean bind= connectivityManager.bindProcessToNetwork(network);
+debug("Bind result: "+bind);
+//                    success = manager.bindProcessToNetwork(null); to clear
                 }
             };
             networkWeakReference = new WeakReference<>(networkCallback);
@@ -209,6 +214,9 @@ public class FlutterIotWifiPlugin implements FlutterPlugin, MethodCallHandler {
                     // scan failure handling
                     scanFailure();
                 }
+
+                context.get().getApplicationContext().unregisterReceiver(this);
+
             }
         };
 
@@ -245,7 +253,7 @@ public class FlutterIotWifiPlugin implements FlutterPlugin, MethodCallHandler {
     private void current(@NonNull Result result) {
         WifiInfo info = wifiManager.getConnectionInfo();
         String ssid = info.getSSID();
-        result.success(ssid);
+        result.success(ssid.replace("\"", ""));
     }
 
     @Override
