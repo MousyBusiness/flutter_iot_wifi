@@ -2,20 +2,26 @@ PODS:
   - Flutter (1.0.0)
   - flutter_iot_wifi (0.0.1):
     - Flutter
+  - "permission_handler (5.1.0+2)":
+    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_iot_wifi (from `.symlinks/plugins/flutter_iot_wifi/ios`)
+  - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
   flutter_iot_wifi:
     :path: ".symlinks/plugins/flutter_iot_wifi/ios"
+  permission_handler:
+    :path: ".symlinks/plugins/permission_handler/ios"
 
 SPEC CHECKSUMS:
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
   flutter_iot_wifi: 1e798012ff737e8af6d109740136068c5916e512
+  permission_handler: ccb20a9fad0ee9b1314a52b70b76b473c5f8dab0
 
 PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
 

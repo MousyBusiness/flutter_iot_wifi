@@ -6,8 +6,8 @@ import 'package:flutter/services.dart';
 class FlutterIotWifi {
   static const MethodChannel _channel = MethodChannel('flutter_iot_wifi');
 
-  static Future<bool?> connect(String ssid, String password) async {
-    final connected = await _channel.invokeMethod('connect', {"ssid": ssid, "password": password});
+  static Future<bool?> connect(String ssid, String password, {bool prefix = false}) async {
+    final connected = await _channel.invokeMethod('connect', {"ssid": ssid, "password": password, "prefix": prefix});
     return connected;
   }
 

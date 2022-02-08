@@ -32,10 +32,22 @@ public class SwiftFlutterIotWifiPlugin: NSObject, FlutterPlugin {
             if let args = call.arguments as? Dictionary<String, Any> {
                 let ssid = args["ssid"] as? String
                 let password = args["password"] as? String
+                let prefixConnect = args["prefix"] as? Bool ?? false
+
+                if #available(iOS 13.0, *) {
+                    // allow
+                }else{
+                    if(prefixConnect){
+                       debug("prefixConnect requires iOS >= 13.0")
+                       result(false)
+                       return
+                    }
+                }
+
                 if ssid == nil || password == nil || ssid == "" || password == "" {
                     debug("invalid ssid or password")
                 } else {
-                    connect(ssid!, password!)
+                    connect(ssid!, password!, prefixConnect)
                     result(true)
                     return
                 }
@@ -63,11 +75,19 @@ public class SwiftFlutterIotWifiPlugin: NSObject, FlutterPlugin {
         result(false)
     }
 
-    private func connect(_ ssid: String, _ password: String) {
+    private func connect(_ ssid: String, _ password: String, _ prefixConnect: Bool) {
         if #available(iOS 11.0, *) {
-            let hotspotConfig = NEHotspotConfiguration(ssid: ssid, passphrase: password, isWEP: false)
-            hotspotConfig.joinOnce = true
-            NEHotspotConfigurationManager.shared.apply(hotspotConfig) { [unowned self] (error) in
+            var hotspotConfig: NEHotspotConfiguration?
+            if prefixConnect {
+             if #available(iOS 13.0, *) {
+                hotspotConfig = NEHotspotConfiguration(ssidPrefix: ssid, passphrase: password, isWEP: false)
+             }
+            }else{
+             hotspotConfig = NEHotspotConfiguration(ssid: ssid, passphrase: password, isWEP: false)
+            }
+
+            hotspotConfig!.joinOnce = true
+            NEHotspotConfigurationManager.shared.apply(hotspotConfig!) { [unowned self] (error) in
                 if let error = error {
                     if (error.localizedDescription.contains("already associated")) {
                         debug("connection already established")
@@ -75,7 +95,6 @@ public class SwiftFlutterIotWifiPlugin: NSObject, FlutterPlugin {
                         debug("[Error] \(error)")
                     }
                 } else {
-                    debug("connected!")
                     ssidCache = ssid
                 }
             }

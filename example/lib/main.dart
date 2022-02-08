@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_iot_wifi/flutter_iot_wifi.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -31,8 +33,7 @@ class AccessPointWidget extends StatelessWidget {
   final String password = "12345678"; // TODO replace with your password
 
   Future<bool> _checkPermissions() async {
-    if (await Permission.location.request().isGranted) {
-      print("granted");
+    if (Platform.isIOS || await Permission.location.request().isGranted) {
       return true;
     }
     return false;
@@ -40,7 +41,7 @@ class AccessPointWidget extends StatelessWidget {
 
   void _connect() async {
     if (await _checkPermissions()) {
-      FlutterIotWifi.connect(ssid, password).then((value) => print("connected $value"));
+      FlutterIotWifi.connect(ssid, password, prefix: true).then((value) => print("connect initiated: $value"));
     } else {
       print("don't have permission");
     }
@@ -48,7 +49,7 @@ class AccessPointWidget extends StatelessWidget {
 
   void _disconnect() async {
     if (await _checkPermissions()) {
-      FlutterIotWifi.disconnect().then((value) => print("disconnected $value"));
+      FlutterIotWifi.disconnect().then((value) => print("disconnect initiated: $value"));
     } else {
       print("don't have permission");
     }
@@ -56,7 +57,7 @@ class AccessPointWidget extends StatelessWidget {
 
   void _scan() async {
     if (await _checkPermissions()) {
-      FlutterIotWifi.scan().then((value) => print("scan $value"));
+      FlutterIotWifi.scan().then((value) => print("scan started: $value"));
     } else {
       print("don't have permission");
     }
@@ -64,7 +65,7 @@ class AccessPointWidget extends StatelessWidget {
 
   void _list() async {
     if (await _checkPermissions()) {
-      FlutterIotWifi.list().then((value) => print("list $value"));
+      FlutterIotWifi.list().then((value) => print("ssids: $value"));
     } else {
       print("don't have permission");
     }
@@ -72,7 +73,7 @@ class AccessPointWidget extends StatelessWidget {
 
   void _current() async {
     if (await _checkPermissions()) {
-      FlutterIotWifi.current().then((value) => print("current $value"));
+      FlutterIotWifi.current().then((value) => print("current ssid: $value"));
     } else {
       print("don't have permission");
     }

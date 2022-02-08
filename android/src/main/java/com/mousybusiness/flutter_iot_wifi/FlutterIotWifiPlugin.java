@@ -99,11 +99,12 @@ public class FlutterIotWifiPlugin implements FlutterPlugin, MethodCallHandler {
             Map<String, Object> argMap = (Map<String, Object>) call.arguments;// as Map<String, Any>
             String ssid = (String) argMap.get("ssid");
             String password = (String) argMap.get("password");
+            Boolean prefix = (Boolean) argMap.get("prefix");
 
 
             final NetworkSpecifier specifier =
                     new WifiNetworkSpecifier.Builder()
-                            .setSsidPattern(new PatternMatcher(ssid, PatternMatcher.PATTERN_LITERAL))
+                            .setSsidPattern(new PatternMatcher(ssid, prefix != null ? PatternMatcher.PATTERN_PREFIX : PatternMatcher.PATTERN_LITERAL))
                             .setWpa2Passphrase(password)
                             .build();
             final NetworkRequest request =
