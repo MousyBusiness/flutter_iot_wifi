@@ -1,6 +1,6 @@
 name: flutter_iot_wifi
 description: Connect to an IoT access point using Android or iOS
-version: 0.0.2
+version: 0.0.3
 homepage: https://github.com/MousyBusiness/flutter_iot_wifi
 repository: https://github.com/MousyBusiness/flutter_iot_wifi
 
