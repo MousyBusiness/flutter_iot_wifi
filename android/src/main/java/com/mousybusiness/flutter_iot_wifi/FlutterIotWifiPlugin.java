@@ -17,10 +17,13 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Build;
+import android.os.Handler;
 import android.os.Looper;
 import android.os.PatternMatcher;
+import android.provider.Settings;
 import android.util.Log;
 
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
@@ -67,13 +70,16 @@ public class FlutterIotWifiPlugin implements FlutterPlugin, MethodCallHandler {
             result.success(lastScanResults);
         } else if (call.method.equals("current")) {
             current(result);
+        } else if (call.method.equals("open_settings")) {
+            openSettings();
+            result.success(true);
         } else {
             result.notImplemented();
         }
     }
 
     private void debug(String msg) {
-        Log.e("FlutterIot", msg);
+        Log.d("FlutterIot", msg);
     }
 
     private void error(String msg) {
@@ -101,7 +107,6 @@ public class FlutterIotWifiPlugin implements FlutterPlugin, MethodCallHandler {
             String ssid = (String) argMap.get("ssid");
             String password = (String) argMap.get("password");
             Boolean prefix = (Boolean) argMap.get("prefix");
-
 
             final NetworkSpecifier specifier =
                     new WifiNetworkSpecifier.Builder()
@@ -138,6 +143,10 @@ public class FlutterIotWifiPlugin implements FlutterPlugin, MethodCallHandler {
                     connectivityManager.unregisterNetworkCallback(this);
                     networkWeakReference.clear();
                     networkWeakReference = null;
+
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        channel.invokeMethod("failed", null);
+                    });
                 }
 
                 @Override
@@ -163,9 +172,8 @@ public class FlutterIotWifiPlugin implements FlutterPlugin, MethodCallHandler {
                     debug("onAvailable");
                     super.onAvailable(network);
 
-                    boolean bind= connectivityManager.bindProcessToNetwork(network);
-debug("Bind result: "+bind);
-//                    success = manager.bindProcessToNetwork(null); to clear
+                    boolean bind = connectivityManager.bindProcessToNetwork(network);
+                    debug("Bind result: " + bind);
                 }
             };
             networkWeakReference = new WeakReference<>(networkCallback);
@@ -254,6 +262,13 @@ debug("Bind result: "+bind);
         WifiInfo info = wifiManager.getConnectionInfo();
         String ssid = info.getSSID();
         result.success(ssid.replace("\"", ""));
+    }
+
+    private void openSettings() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            Intent panelIntent = new Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY);
+            context.get().getApplicationContext().startActivity(panelIntent);
+        }
     }
 
     @Override

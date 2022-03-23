@@ -34,12 +34,13 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         // first ask for WhenInUse permission, then ask for Always permission to
         // get to a second system alert
         if #available(iOS 13.4, *) {
+            self.locationManager.requestWhenInUseAuthorization()
+
             self.requestLocationAuthorizationCallback = { status in
                 if status == .authorizedWhenInUse {
                     self.locationManager.requestAlwaysAuthorization()
                 }
             }
-            self.locationManager.requestWhenInUseAuthorization()
         } else {
             self.locationManager.requestAlwaysAuthorization()
         }
