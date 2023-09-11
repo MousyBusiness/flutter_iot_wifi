@@ -23,7 +23,6 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 30
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -32,4 +31,5 @@ android {
     defaultConfig {
         minSdkVersion 16
     }
+    namespace "com.mousybusiness.flutter_iot_wifi"
 }
